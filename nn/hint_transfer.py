@@ -60,3 +60,61 @@ def unsupervised_hint_transfer(net, net_to_distill, transfer_loader, epochs=1, l
 
     return W
 
+
+
+def unsupervised_hint_transfer_optimized(net, net_to_distill, transfer_loader, epochs=1, lr=0.0001, W=None):
+    """
+    Performs unsupervised neural network hint-based transfer (the projection is jointly optimized)
+    :param net:
+    :param net_to_distill:
+    :param transfer_loader:
+    :param epochs:
+    :param lr:
+    :return:
+    """
+
+    if W is None:
+        # Get the shapes of the layers
+        net_to_distill.eval()
+        net.eval()
+        (inputs, targets) = next(iter(transfer_loader))
+        inputs, targets = inputs.cuda(), targets.cuda()
+        output_target = net_to_distill.get_features(Variable(inputs))
+        output_net = net.get_features(Variable(inputs))
+        out_feats, in_feats = output_target.size()[1], output_net.size()[1]
+
+        W = torch.nn.Linear(in_feats, out_feats, bias=False)
+        W.cuda()
+
+    params = list(net.parameters())
+    params.extend(list(W.parameters()))
+    optimizer = optim.Adam(params=params, lr=lr)
+
+    for epoch in range(epochs):
+        net.train()
+        net_to_distill.eval()
+
+        train_loss = 0
+
+        for (inputs, targets) in tqdm(transfer_loader):
+            inputs, targets = inputs.cuda(), targets.cuda()
+
+            # Feed forward the network and update
+            optimizer.zero_grad()
+
+            # Get the data
+            inputs = inputs.cuda()
+            output_target = net_to_distill.get_features(Variable(inputs))
+            output_net = net.get_features(Variable(inputs))
+            output_net_expanded = W(output_net)
+            loss = torch.sum((output_target - output_net_expanded) ** 2) / output_net.size()[0]
+
+            loss.backward()
+            optimizer.step()
+
+            train_loss += loss.cpu().data.item()
+
+        print("\nLoss  = ", train_loss)
+
+    return W
+

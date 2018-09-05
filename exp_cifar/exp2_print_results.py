@@ -31,9 +31,11 @@ def print_exp1_table(eval_set='cifar10'):
                        pickle_path='results/cifar_tiny_resnet18_cifar10_distill_' + eval_set + '.pickle', eval_set=eval_set)
 
     # print("--------------")
-    print_results_line(model_name='HINT (feat)', transfer_set='-',
+    print_results_line(model_name='HINT (rand)', transfer_set='-',
                        pickle_path='results/cifar_tiny_resnet18_cifar10_hint__' + eval_set + '.pickle', eval_set=eval_set)
-    print_results_line(model_name='KT(feat)', transfer_set='-',
+    print_results_line(model_name='HINT (optimized)', transfer_set='-',
+                       pickle_path='results/cifar_tiny_resnet18_cifar10_hint_optimized__' + eval_set + '.pickle', eval_set=eval_set)
+    print_results_line(model_name='KT', transfer_set='-',
                        pickle_path='results/cifar_tiny_resnet18_cifar10_kt_' + eval_set + '.pickle', eval_set=eval_set)
 
 
