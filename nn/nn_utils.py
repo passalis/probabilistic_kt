@@ -89,3 +89,13 @@ def extract_features(net, test_loader):
         features.append(outputs.data.numpy())
 
     return np.concatenate(features)
+
+def get_raw_features(test_loader):
+    """
+    Extracts the raw input features
+    :return:
+    """
+    features = []
+    for (inputs, targets) in tqdm(test_loader):
+        features.append(np.float16(inputs.numpy()))
+    return np.concatenate(features)

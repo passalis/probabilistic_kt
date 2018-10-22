@@ -62,6 +62,55 @@ def unsupervised_hint_transfer(net, net_to_distill, transfer_loader, epochs=1, l
 
 
 
+def unsupervised_hint_transfer_handcrafted(net, transfer_loader, epochs=1, lr=0.0001, W=None):
+    """
+    Performs unsupervised neural network hint-based transfer
+    :param net:
+    :param net_to_distill:
+    :param transfer_loader:
+    :param epochs:
+    :param lr:
+    :return:
+    """
+
+    if W is None:
+        # Get the shapes of the layers
+        net.eval()
+        (inputs, features, targets) = next(iter(transfer_loader))
+        inputs, features, targets = inputs.cuda(), features.cuda(), targets.cuda()
+        output_target = Variable(features)
+        output_net = net.get_features(Variable(inputs))
+        out_feats, in_feats = output_target.size()[1], output_net.size()[1]
+        W = torch.nn.Linear(out_feats, in_feats, bias=False)
+        W.cuda()
+
+    optimizer = optim.Adam(params=net.parameters(), lr=lr)
+
+    for epoch in range(epochs):
+        net.train()
+
+        train_loss = 0
+
+        for (inputs, features, targets) in tqdm(transfer_loader):
+            inputs, features, targets = inputs.cuda(), features.cuda(), targets.cuda()
+            output_target = Variable(features)
+
+            optimizer.zero_grad()
+            output_target_reduced = W(output_target)
+            output_net = net.get_features(Variable(inputs))
+
+            loss = torch.sum((output_net - output_target_reduced) ** 2) / output_net.size()[0]
+
+            loss.backward()
+            optimizer.step()
+
+            train_loss += loss.cpu().data.item()
+
+        print("\nLoss  = ", train_loss)
+
+    return W
+
+
 def unsupervised_hint_transfer_optimized(net, net_to_distill, transfer_loader, epochs=1, lr=0.0001, W=None):
     """
     Performs unsupervised neural network hint-based transfer (the projection is jointly optimized)
@@ -97,10 +146,10 @@ def unsupervised_hint_transfer_optimized(net, net_to_distill, transfer_loader, e
         train_loss = 0
 
         for (inputs, targets) in tqdm(transfer_loader):
-            inputs, targets = inputs.cuda(), targets.cuda()
-
             # Feed forward the network and update
             optimizer.zero_grad()
+
+            inputs, targets = inputs.cuda(), targets.cuda()
 
             # Get the data
             inputs = inputs.cuda()
@@ -117,4 +166,3 @@ def unsupervised_hint_transfer_optimized(net, net_to_distill, transfer_loader, e
         print("\nLoss  = ", train_loss)
 
     return W
-

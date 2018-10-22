@@ -52,8 +52,41 @@ def knowledge_transfer(net, net_to_distill, transfer_loader, epochs=1, lr=0.0001
         print("\n Epoch = ", epoch, " Loss  = ", train_loss)
 
 
+def knowledge_transfer_handcrafted(net, transfer_loader, epochs=1, lr=0.0001, supervised_weight=0):
+    optimizer = optim.Adam(params=net.parameters(), lr=lr)
+
+    for epoch in range(epochs):
+
+        net.train()
+
+        train_loss = 0
+        counter = 1
+        for (inputs, features, targets) in tqdm(transfer_loader):
+            inputs, features, targets = inputs.cuda(), features.cuda(), targets.cuda()
+            output_target = Variable(features)
+
+            # Feed forward the network and update
+            optimizer.zero_grad()
+
+            # # Get the data
+            outputs_net = net.get_features(Variable(inputs))
+
+            # Get the loss
+            loss = cosine_similarity_loss(outputs_net, output_target) + \
+                   supervised_weight * supervised_loss(outputs_net, targets)
+
+            loss.backward()
+            optimizer.step()
+
+            train_loss += loss.cpu().data[0]
+            counter += 1
+
+        train_loss = train_loss / float(counter)
+        print("\n Epoch = ", epoch, " Loss  = ", train_loss)
+
+
 def cosine_similarity_loss(output_net, target_net, eps=0.0000001):
-    # Normalize each vector by its l2 norm
+    # Normalize each vector by its norm
     output_net_norm = torch.sqrt(torch.sum(output_net ** 2, dim=1, keepdim=True))
     output_net = output_net / (output_net_norm + eps)
     output_net[output_net != output_net] = 0
@@ -62,10 +95,12 @@ def cosine_similarity_loss(output_net, target_net, eps=0.0000001):
     target_net = target_net / (target_net_norm + eps)
     target_net[target_net != target_net] = 0
 
-    # Calculate the cosine similarity matrices
+    # Calculate the cosine similarity
     model_similarity = torch.mm(output_net, output_net.transpose(0, 1))
-    model_similarity = (model_similarity + 1.0) / 2.0
     target_similarity = torch.mm(target_net, target_net.transpose(0, 1))
+
+    # Scale cosine similarity to 0..1
+    model_similarity = (model_similarity + 1.0) / 2.0
     target_similarity = (target_similarity + 1.0) / 2.0
 
     # Transform them into probabilities
@@ -98,6 +133,7 @@ def supervised_loss(output_net, targets, eps=0.0000001):
 
     # Calculate the cosine similarity
     model_similarity = torch.mm(output_net, output_net.transpose(0, 1))
+    # Scale cosine similarity to 0..1
     model_similarity = (model_similarity + 1.0) / 2.0
 
     # Transform them into probabilities

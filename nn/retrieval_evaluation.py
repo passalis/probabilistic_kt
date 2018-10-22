@@ -1,7 +1,7 @@
 from sklearn.neighbors import NearestNeighbors
 from tqdm import tqdm
 from time import time
-from nn.nn_utils import get_labels, extract_features
+from nn.nn_utils import get_labels, extract_features, get_raw_features
 import numpy as np
 import pickle
 from exp_cifar.cifar_dataset import cifar10_loader
@@ -123,7 +123,7 @@ class Database(object):
         return results
 
 
-def retrieval_evaluation(net, train_loader, test_loader, metric='cosine'):
+def retrieval_evaluation(net, train_loader, test_loader, metric='cosine', raw=False):
     """
     Evalutes a pytorch model using a retrieval setup
     :param net:
@@ -139,9 +139,14 @@ def retrieval_evaluation(net, train_loader, test_loader, metric='cosine'):
 
     # Get the features
     a = time()
-    train_features = extract_features(net, train_loader)
-    ff_time = (time() - a) / float(len(train_labels))
-    test_features = extract_features(net, test_loader)
+    if raw:
+        train_features = get_raw_features(train_loader)
+        test_features = get_raw_features(test_loader)
+        ff_time = 0
+    else:
+        train_features = extract_features(net, train_loader)
+        ff_time = (time() - a) / float(len(train_labels))
+        test_features = extract_features(net, test_loader)
 
     # Evaluate the model
     database = Database(train_features, train_labels, metric=metric)
