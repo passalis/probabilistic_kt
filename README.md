@@ -1,6 +1,6 @@
 # Probabilistic Knowledge Transfer for Deep Neural Networks
 
-In this repository we provide an implementation of a generic Probablistic Knowledge Transfer (PKT) method, as described in [our paper](https://arxiv.org/abs/1803.10837), which is capable of transferring the knowledge from a large and complex neural network (or any other model) into a smaller and faster one, regardless their architectures. The method was implemented and tested using PyTorch v.0.4.0.
+In this repository we provide an implementation of a generic Probablistic Knowledge Transfer (PKT) method, as described in [our paper](https://arxiv.org/abs/1803.10837), which is capable of transferring the knowledge from a large and complex neural network (or any other model) into a smaller and faster one, regardless their architectures. The method was originally implemented using PyTorch v.0.2 and then tested with PyTorch v.0.4. If you face any issue training the models, please consider disabling CUDNN (torch.backends.cudnn.enabled = False).
 
 To reproduce the results reported in our paper:
 1. Train and evaluate the baselines model ([exp0_baseline_models.py](exp_cifar/exp0_baseline_models.py))
