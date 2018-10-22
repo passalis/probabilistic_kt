@@ -11,7 +11,7 @@ Note that a pretrained Resnet-18 teacher model is also provided, along with the 
 
 To reproduce the results using the YouTube Faces dataset:
 1. Donwload the [pre-processed dataset](https://www.dropbox.com/s/hlxmd1oofr8j0km/youtube_faces.tar.xz?dl=0) (or prepare it by yourself)
-2. Use PKT to transfer the knowledge encoded in handcrafted into a neural network and evaluate its performance ([exp_yf/exp1_transfer.py](exp_yf/exp1_transfer.py))
+2. Use PKT to transfer the knowledge encoded in handcrafted features into a neural network and evaluate its performance ([exp_yf/exp1_transfer.py](exp_yf/exp1_transfer.py))
 3. Print the evaluation results ([exp_yf/exp2_print_results.py](exp_yf/exp2_print_results.py))
 
 
